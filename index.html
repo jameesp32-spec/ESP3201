@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mist Maker Control</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; margin-top: 50px; background: #f0f2f5; }
+    h2 { color: #333; }
+    input { padding: 10px; margin: 5px; font-size: 16px; width: 250px; }
+    button { padding: 12px 24px; font-size: 16px; cursor: pointer; border: none; border-radius: 6px; color: white; margin: 10px; }
+    #login { background-color: #007bff; }
+    #on { background-color: #28a745; }
+    #off { background-color: #dc3545; }
+    button:disabled { background-color: #ccc; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <h2>Mist Maker Control</h2>
+
+  <div>
+    <input id="email" type="email" placeholder="Firebase Email" value="jameesp32@gmail.com"><br>
+    <input id="password" type="password" placeholder="Firebase Password" value="Ashjk98th"><br>
+    <button id="login">Login</button>
+  </div>
+  
+  <p id="status">ยังไม่ได้เข้าสู่ระบบ</p>
+
+  <div>
+    <button id="on" disabled>เปิด (ON)</button>
+    <button id="off" disabled>ปิด (OFF)</button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+
+    // Firebase Config ของคุณ
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyD-5lOhRA2Qe-DoR3D4BCOtnGH-mQy4veE",
+  authDomain: "smartmistmakeresp32.firebaseapp.com",
+  databaseURL: "https://smartmistmakeresp32-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "smartmistmakeresp32",
+  storageBucket: "smartmistmakeresp32.firebasestorage.app",
+  messagingSenderId: "775508523221",
+  appId: "1:775508523221:web:21c1e146357fe669948a5c",
+  measurementId: "G-1MFNPT0KB1"
+};
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    // แก้ไข Path ให้ตรงกับฐานข้อมูลจริง (/mistMaker)
+    const mistRef = ref(db, "/mistMaker");
+
+    document.getElementById("login").onclick = async () => {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        document.getElementById("status").textContent = "เข้าสู่ระบบแล้ว (กำลังซิงค์ข้อมูล...)";
+
+        document.getElementById("on").disabled = false;
+        document.getElementById("off").disabled = false;
+
+        onValue(mistRef, (snapshot) => {
+          const val = snapshot.val();
+          const isOn = (val === true || val === 1 || val === "true");
+          document.getElementById("status").textContent = "สถานะ Mist Maker: " + (isOn ? "ON (เปิดอยู่)" : "OFF (ปิดอยู่)");
+        });
+      } catch (error) {
+        document.getElementById("status").textContent = "Login ไม่สำเร็จ: " + error.message;
+      }
+    };
+
+    document.getElementById("on").onclick = async () => {
+      await set(mistRef, true);
+    };
+
+    document.getElementById("off").onclick = async () => {
+      await set(mistRef, false);
+    };
+  </script>
+</body>
+</html>
